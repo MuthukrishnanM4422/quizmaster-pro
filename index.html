@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster Pro - Real Multiplayer</title>
+    <style>
+        /* Add all the CSS from previous implementation */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .network-status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .status-online {
+            color: #4CAF50;
+        }
+        
+        .status-offline {
+            color: #f44336;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 5px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 5px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .tab.active {
+            background-color: #ff5722;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            min-height: 500px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #e64a19;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button.secondary {
+            background-color: #2196F3;
+        }
+        
+        button.secondary:hover {
+            background-color: #0b7dda;
+        }
+        
+        button.success {
+            background-color: #4CAF50;
+        }
+        
+        button.success:hover {
+            background-color: #3d8b40;
+        }
+        
+        .game-code {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+        
+        .player-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .player-card {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .player-card:hover {
+            transform: translateY(-5px);
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        .player-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ff5722;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .question-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .question-text {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .option {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .option:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.03);
+        }
+        
+        .option.selected {
+            background-color: #ff9800;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.5);
+        }
+        
+        .option.correct {
+            background-color: #4caf50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+        
+        .option.incorrect {
+            background-color: #f44336;
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+        }
+        
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #ffeb3b;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .results-table th, .results-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .results-table th {
+            background-color: rgba(255, 87, 34, 0.7);
+        }
+        
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .highlight {
+            background-color: rgba(255, 215, 0, 0.2);
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.5s ease, fadeOut 0.5s ease 2.5s forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .share-url {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        
+        .share-btn {
+            background-color: #2196F3;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .share-btn.whatsapp {
+            background-color: #25D366;
+        }
+        
+        .share-btn.email {
+            background-color: #EA4335;
+        }
+        
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
+            .tab {
+                margin: 2px;
+                border-radius: 10px;
+            }
+            
+            .host-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .share-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        .host-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .host-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .connected {
+            background-color: #4CAF50;
+        }
+        
+        .disconnected {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connection-status">Connecting...</div>
+    
+    <div class="container">
+        <header>
+            <h1>QuizMaster Pro</h1>
+            <p class="subtitle">Real Multiplayer Quiz Game - Play with friends across networks!</p>
+            <div class="network-status" id="network-status">
+                <span class="status-online">●</span> 
+                <span id="status-text">Real Multiplayer Mode</span>
+            </div>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="host">Host Game</div>
+            <div class="tab" data-tab="player">Join Game</div>
+            <div class="tab" data-tab="results">Results</div>
+        </div>
+        
+        <!-- Host Tab -->
+        <div id="host" class="tab-content active">
+            <h2>Host a Real Multiplayer Game</h2>
+            
+            <div class="instructions">
+                <h3>How to play with friends across networks:</h3>
+                <ol>
+                    <li>Create a game and share the URL with friends</li>
+                    <li>Friends join using any device on any network</li>
+                    <li>Start the game when everyone has joined</li>
+                    <li>Players answer questions in real-time</li>
+                    <li>See live scores and results</li>
+                </ol>
+            </div>
+            
+            <div class="form-group">
+                <label for="host-name">Your Name</label>
+                <input type="text" id="host-name" placeholder="Enter your name" value="Quiz Master">
+            </div>
+            
+            <button id="create-game">Create Game</button>
+            
+            <div id="game-controls" class="hidden">
+                <div class="game-code">
+                    Game Code: <span id="game-code">----</span>
+                </div>
+                
+                <div class="share-url">
+                    <p><strong>Share this URL with players:</strong></p>
+                    <p id="game-url"></p>
+                    <div class="share-buttons">
+                        <div class="share-btn" id="copy-url">
+                            📋 Copy URL
+                        </div>
+                        <div class="share-btn whatsapp" id="share-whatsapp">
+                            📱 WhatsApp
+                        </div>
+                        <div class="share-btn email" id="share-email">
+                            ✉️ Email
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-status">
+                    <h3>Game Status: <span id="game-status">Waiting for players...</span></h3>
+                    <p>Players Joined: <span id="player-count">0</span> | Questions: <span id="question-count">30</span></p>
+                    <p id="current-question-info">No active question</p>
+                </div>
+                
+                <div class="host-layout">
+                    <div class="host-section">
+                        <h3>Players</h3>
+                        <div id="players-list" class="player-list">
+                            <!-- Player cards will be added here -->
+                        </div>
+                        
+                        <div class="control-panel">
+                            <button id="start-game" class="success">Start Game</button>
+                            <button id="start-question">Start Question</button>
+                            <button id="reset-game">Reset Game</button>
+                        </div>
+                    </div>
+                    
+                    <div class="host-section">
+                        <h3>Game Control</h3>
+                        
+                        <div class="control-panel">
+                            <button id="next-question" class="secondary">Next Question</button>
+                            <button id="end-game">End Game</button>
+                        </div>
+                        
+                        <div id="current-question-control" class="hidden">
+                            <div class="question-container">
+                                <div class="question-text" id="control-question">Question will appear here</div>
+                                <div class="options-container">
+                                    <div class="option" data-option="1">Option 1</div>
+                                    <div class="option" data-option="2">Option 2</div>
+                                    <div class="option" data-option="3">Option 3</div>
+                                    <div class="option" data-option="4">Option 4</div>
+                                </div>
+                                <div class="timer" id="control-timer">20</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Player Tab -->
+        <div id="player" class="tab-content">
+            <h2>Join a Game</h2>
+            
+            <div class="instructions">
+                <h3>How to join:</h3>
+                <ol>
+                    <li>Get the game URL from the host</li>
+                    <li>Enter your name and the game code below</li>
+                    <li>Click "Join Game" to enter the lobby</li>
+                    <li>Wait for the host to start the game</li>
+                    <li>Answer questions as they appear</li>
+                </ol>
+            </div>
+            
+            <div class="form-group">
+                <label for="player-name">Your Name</label>
+                <input type="text" id="player-name" placeholder="Enter your name">
+            </div>
+            
+            <div class="form-group">
+                <label for="game-code-input">Game Code</label>
+                <input type="text" id="game-code-input" placeholder="Enter game code">
+            </div>
+            
+            <button id="join-game">Join Game</button>
+            
+            <div id="player-waiting" class="hidden">
+                <h3>Waiting for the game to start...</h3>
+                <p>You've joined the game! The host will start soon.</p>
+                <div class="player-list" id="player-waiting-list">
+                    <!-- Player cards will be added here -->
+                </div>
+            </div>
+            
+            <div id="player-game" class="hidden">
+                <div class="question-container">
+                    <div class="question-text" id="player-question">Question will appear here</div>
+                    <div class="options-container">
+                        <div class="option" data-option="1">Option 1</div>
+                        <div class="option" data-option="2">Option 2</div>
+                        <div class="option" data-option="3">Option 3</div>
+                        <div class="option" data-option="4">Option 4</div>
+                    </div>
+                    <div class="timer" id="player-timer">20</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div id="results" class="tab-content">
+            <h2>Game Results</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <!-- Results will be populated here -->
+                </tbody>
+            </table>
+            
+            <button id="new-game" class="hidden">Start New Game</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Socket.io connection
+        const socket = io();
+        
+        // Game state
+        let gameState = {
+            gameCode: null,
+            isHost: false,
+            players: [],
+            currentQuestion: null,
+            scores: {},
+            gameStarted: false,
+            questionActive: false
+        };
+
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const connectionStatus = document.getElementById('connection-status');
+        
+        // Host elements
+        const createGameBtn = document.getElementById('create-game');
+        const gameControls = document.getElementById('game-controls');
+        const gameCodeSpan = document.getElementById('game-code');
+        const gameUrlSpan = document.getElementById('game-url');
+        const gameStatusSpan = document.getElementById('game-status');
+        const currentQuestionInfo = document.getElementById('current-question-info');
+        const playerCount = document.getElementById('player-count');
+        const questionCount = document.getElementById('question-count');
+        
+        // Host game control elements
+        const playersList = document.getElementById('players-list');
+        const startGameBtn = document.getElementById('start-game');
+        const startQuestionBtn = document.getElementById('start-question');
+        const resetGameBtn = document.getElementById('reset-game');
+        const nextQuestionBtn = document.getElementById('next-question');
+        const endGameBtn = document.getElementById('end-game');
+        const currentQuestionControl = document.getElementById('current-question-control');
+        const controlQuestion = document.getElementById('control-question');
+        const controlOptions = document.querySelectorAll('#host .option');
+        const controlTimer = document.getElementById('control-timer');
+        
+        // Player elements
+        const joinGameBtn = document.getElementById('join-game');
+        const playerWaiting = document.getElementById('player-waiting');
+        const playerGame = document.getElementById('player-game');
+        const playerWaitingList = document.getElementById('player-waiting-list');
+        const playerQuestion = document.getElementById('player-question');
+        const playerOptions = document.querySelectorAll('#player .option');
+        const playerTimer = document.getElementById('player-timer');
+        
+        // Results elements
+        const resultsBody = document.getElementById('results-body');
+        const newGameBtn = document.getElementById('new-game');
+        
+        // Share buttons
+        const copyUrlBtn = document.getElementById('copy-url');
+        const shareWhatsappBtn = document.getElementById('share-whatsapp');
+        const shareEmailBtn = document.getElementById('share-email');
+
+        // Socket.io event handlers
+        socket.on('connect', () => {
+            connectionStatus.textContent = 'Connected';
+            connectionStatus.className = 'connection-status connected';
+            showNotification('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = 'Disconnected';
+            connectionStatus.className = 'connection-status disconnected';
+            showNotification('Disconnected from server');
+        });
+
+        socket.on('game-created', (data) => {
+            gameState = { ...gameState, ...data.game, isHost: true };
+            gameState.gameCode = data.gameCode;
+            
+            gameCodeSpan.textContent = data.gameCode;
+            gameUrlSpan.textContent = window.location.href;
+            
+            gameControls.classList.remove('hidden');
+            updateGameDisplay();
+            showNotification('Game created successfully!');
+        });
+
+        socket.on('player-joined', (players) => {
+            gameState.players = players;
+            updatePlayersList();
+            showNotification('New player joined!');
+        });
+
+        socket.on('game-update', (game) => {
+            gameState = { ...gameState, ...game };
+            updateGameDisplay();
+        });
+
+        socket.on('game-started', (game) => {
+            gameState = { ...gameState, ...game, gameStarted: true };
+            updateGameDisplay();
+            showNotification('Game started!');
+        });
+
+        socket.on('question-started', (game) => {
+            gameState = { ...gameState, ...game, questionActive: true };
+            updateQuestionDisplay();
+            showNotification('Question started!');
+        });
+
+        socket.on('timer-update', (timer) => {
+            controlTimer.textContent = timer;
+            playerTimer.textContent = timer;
+        });
+
+        socket.on('question-ended', (game) => {
+            gameState = { ...gameState, ...game, questionActive: false };
+            showCorrectAnswer();
+            updateGameDisplay();
+            showNotification('Question ended!');
+        });
+
+        socket.on('game-ended', (game) => {
+            gameState = { ...gameState, ...game, gameEnded: true };
+            updateResults();
+            showNotification('Game ended!');
+        });
+
+        socket.on('join-error', (message) => {
+            showNotification(message);
+        });
+
+        socket.on('host-disconnected', () => {
+            showNotification('Host disconnected. Game ended.');
+            resetGameState();
+        });
+
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Create game
+        createGameBtn.addEventListener('click', () => {
+            const hostName = document.getElementById('host-name').value || 'Quiz Master';
+            socket.emit('create-game', { hostName });
+        });
+
+        // Join game
+        joinGameBtn.addEventListener('click', () => {
+            const playerName = document.getElementById('player-name').value;
+            const gameCode = document.getElementById('game-code-input').value.toUpperCase();
+            
+            if (!playerName) {
+                showNotification('Please enter your name');
+                return;
+            }
+            
+            if (!gameCode) {
+                showNotification('Please enter a game code');
+                return;
+            }
+            
+            socket.emit('join-game', { gameCode, playerName });
+            playerWaiting.classList.remove('hidden');
+        });
+
+        // Start game
+        startGameBtn.addEventListener('click', () => {
+            socket.emit('start-game', gameState.gameCode);
+        });
+
+        // Start question
+        startQuestionBtn.addEventListener('click', () => {
+            socket.emit('start-question', gameState.gameCode);
+        });
+
+        // Next question
+        nextQuestionBtn.addEventListener('click', () => {
+            socket.emit('next-question', gameState.gameCode);
+        });
+
+        // End game
+        endGameBtn.addEventListener('click', () => {
+            socket.emit('end-game', gameState.gameCode);
+        });
+
+        // Reset game
+        resetGameBtn.addEventListener('click', () => {
+            socket.emit('reset-game', gameState.gameCode);
+        });
+
+        // Player answer selection
+        playerOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                if (!gameState.questionActive) return;
+                
+                playerOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                const answer = parseInt(option.getAttribute('data-option'));
+                socket.emit('submit-answer', { 
+                    gameCode: gameState.gameCode, 
+                    answer: answer 
+                });
+                
+                showNotification('Answer submitted!');
+            });
+        });
+
+        // Share functionality
+        copyUrlBtn.addEventListener('click', () => {
+            const gameUrl = window.location.href;
+            navigator.clipboard.writeText(gameUrl).then(() => {
+                showNotification('URL copied to clipboard!');
+            });
+        });
+
+        // Update game display
+        function updateGameDisplay() {
+            playerCount.textContent = gameState.players.length;
+            questionCount.textContent = gameState.questions ? gameState.questions.length : 0;
+            
+            if (gameState.gameStarted) {
+                gameStatusSpan.textContent = 'Game in progress';
+            } else if (gameState.gameEnded) {
+                gameStatusSpan.textContent = 'Game ended';
+            } else {
+                gameStatusSpan.textContent = 'Waiting for players';
+            }
+            
+            if (gameState.currentQuestion) {
+                currentQuestionInfo.textContent = `Question ${gameState.currentQuestionIndex + 1} of ${gameState.questions.length}`;
+            }
+            
+            updatePlayersList();
+        }
+
+        // Update players list
+        function updatePlayersList() {
+            playersList.innerHTML = '';
+            playerWaitingList.innerHTML = '';
+            
+            gameState.players.forEach(player => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'player-card';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'player-avatar';
+                avatar.textContent = player.name.charAt(0).toUpperCase();
+                
+                const name = document.createElement('div');
+                name.textContent = player.name;
+                
+                const score = document.createElement('div');
+                score.textContent = `Score: ${player.score || 0}`;
+                
+                playerCard.appendChild(avatar);
+                playerCard.appendChild(name);
+                playerCard.appendChild(score);
+                
+                playersList.appendChild(playerCard.cloneNode(true));
+                playerWaitingList.appendChild(playerCard);
+            });
+        }
+
+        // Update question display
+        function updateQuestionDisplay() {
+            if (gameState.currentQuestion) {
+                controlQuestion.textContent = gameState.currentQuestion.text;
+                playerQuestion.textContent = gameState.currentQuestion.text;
+                
+                controlOptions.forEach((option, index) => {
+                    option.textContent = gameState.currentQuestion.options[index];
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                });
+                
+                playerOptions.forEach((option, index) => {
+                    option.textContent = gameState.currentQuestion.options[index];
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                });
+                
+                currentQuestionControl.classList.remove('hidden');
+                playerGame.classList.remove('hidden');
+                playerWaiting.classList.add('hidden');
+            }
+        }
+
+        // Show correct answer
+        function showCorrectAnswer() {
+            if (gameState.currentQuestion) {
+                const correctAnswer = gameState.currentQuestion.correctAnswer;
+                
+                controlOptions.forEach(option => {
+                    if (parseInt(option.getAttribute('data-option')) === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                });
+                
+                playerOptions.forEach(option => {
+                    if (parseInt(option.getAttribute('data-option')) === correctAnswer) {
+                        option.classList.add('correct');
+                    }
+                });
+            }
+        }
+
+        // Update results
+        function updateResults() {
+            resultsBody.innerHTML = '';
+            
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            
+            sortedPlayers.forEach((player, index) => {
+                const row = document.createElement('tr');
+                if (index === 0) row.classList.add('highlight');
+                
+                const rankCell = document.createElement('td');
+                rankCell.textContent = index + 1;
+                
+                const playerCell = document.createElement('td');
+                playerCell.textContent = player.name;
+                
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = player.score;
+                
+                row.appendChild(rankCell);
+                row.appendChild(playerCell);
+                row.appendChild(scoreCell);
+                
+                resultsBody.appendChild(row);
+            });
+            
+            newGameBtn.classList.remove('hidden');
+        }
+
+        // Reset game state
+        function resetGameState() {
+            gameState = {
+                gameCode: null,
+                isHost: false,
+                players: [],
+                currentQuestion: null,
+                scores: {},
+                gameStarted: false,
+                questionActive: false
+            };
+            
+            gameControls.classList.add('hidden');
+            playerWaiting.classList.add('hidden');
+            playerGame.classList.add('hidden');
+            currentQuestionControl.classList.add('hidden');
+        }
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            showNotification('Welcome to QuizMaster Pro!');
+        });
+    </script>
+</body>
+</html>
